@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from typing import Optional
 
 from sqlalchemy import Boolean, DateTime, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
@@ -20,7 +21,7 @@ class UrlMapping(Base):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
-    expires_at: Mapped[datetime | None] = mapped_column(
+    expires_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -34,7 +35,7 @@ class ScanEvent(Base):
     scanned_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
-    user_agent: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
+    user_agent: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    ip_address: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
 
     __table_args__ = (Index("idx_token_scanned", "token", "scanned_at"),)

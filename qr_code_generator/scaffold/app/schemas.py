@@ -1,11 +1,12 @@
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel
 
 
 class CreateRequest(BaseModel):
     url: str
-    expires_at: datetime | None = None
+    expires_at: Optional[datetime] = None
 
 
 class CreateResponse(BaseModel):
@@ -20,10 +21,10 @@ class QRInfoResponse(BaseModel):
     original_url: str
     created_at: datetime
     updated_at: datetime
-    expires_at: datetime | None
+    expires_at: Optional[datetime]
     is_deleted: bool
 
 
 class UpdateRequest(BaseModel):
-    url: str | None = None
-    expires_at: datetime | None = None
+    url: Optional[str] = None
+    expires_at: Optional[datetime] = None

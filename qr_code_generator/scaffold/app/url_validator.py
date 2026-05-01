@@ -1,4 +1,5 @@
 from urllib.parse import urlparse
+from typing import Optional
 
 MAX_URL_LENGTH = 2048
 
@@ -9,7 +10,7 @@ BLOCKED_DOMAINS = {
 }
 
 
-def is_blocked_domain(hostname: str | None) -> bool:
+def is_blocked_domain(hostname: Optional[str]) -> bool:
     if hostname is None:
         return True
     return hostname.lower() in BLOCKED_DOMAINS

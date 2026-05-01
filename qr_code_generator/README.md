@@ -18,7 +18,7 @@
 
 ## Guided Track Setup
 
-**Prerequisite:** Python 3.10 or higher
+**Prerequisite:** Python 3.9 or higher
 
 ```bash
 cd scaffold

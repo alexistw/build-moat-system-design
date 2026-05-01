@@ -1,5 +1,6 @@
 import io
 from datetime import datetime, timezone
+from typing import Dict
 
 import qrcode
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -16,7 +17,7 @@ from .url_validator import validate_url
 router = APIRouter()
 
 # In-memory cache (simulates Redis for prototype)
-redirect_cache: dict[str, str] = {}
+redirect_cache: Dict[str, str] = {}
 
 BASE_URL = "http://localhost:8000"
 
