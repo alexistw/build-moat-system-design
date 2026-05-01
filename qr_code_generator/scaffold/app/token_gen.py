@@ -29,14 +29,19 @@ def token_exists_in_db(db: Session, token: str) -> bool:
 
 def generate_token(url: str, db: Session) -> str:
     """SHA-256 + nonce + Base62 token generation with collision retry."""
-    # TODO: Implement this function
-    #
     # Design decision: hash-based tokens give us short, deterministic-ish IDs,
     # but we must handle collisions as the table grows.
     #
     # Hints:
     # 1. Loop up to MAX_RETRIES. Each attempt: hash (url + a varying nonce)
     #    with SHA-256, pass the digest to base62_encode(), truncate to TOKEN_LENGTH.
-    # 2. Use token_exists_in_db() to check for collisions — return on the first
+    # 2. Use token_exists_in_db() to check for collisions -- return on the first
     #    free token, raise RuntimeError if all retries are exhausted.
-    raise NotImplementedError("generate_token() is not yet implemented")
+    nonce_base = time.time_ns()
+    for attempt in range(MAX_RETRIES):
+        digest = hashlib.sha256(f"{url}:{nonce_base}:{attempt}".encode()).digest()
+        token = base62_encode(digest)[:TOKEN_LENGTH]
+        if not token_exists_in_db(db, token):
+            return token
+
+    raise RuntimeError("Unable to generate a unique token")

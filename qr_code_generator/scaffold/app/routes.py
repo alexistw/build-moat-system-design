@@ -1,5 +1,5 @@
 import io
-from datetime import datetime
+from datetime import datetime, timezone
 
 import qrcode
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -53,8 +53,6 @@ def create_qr(req: CreateRequest, db: Session = Depends(get_db)):
 @router.get("/r/{token}")
 def redirect(token: str, request: Request, db: Session = Depends(get_db)):
     """Redirect fallback flow: Cache -> DB -> 404/410 (from slides mermaid diagram)"""
-    # TODO: Implement this function
-    #
     # Design decision: the redirect path is the hottest path in the system, so
     # we use a cache-first strategy (Cache -> DB -> 404/410) to minimize DB load
     # while still handling soft-deleted and expired links.
@@ -64,7 +62,27 @@ def redirect(token: str, request: Request, db: Session = Depends(get_db)):
     #    RedirectResponse(status_code=302).
     # 2. On miss, query the DB: raise 404 if not found, 410 if is_deleted or
     #    past expires_at; otherwise warm the cache, _record_scan(), and 302.
-    raise NotImplementedError("redirect() is not yet implemented")
+    cached_url = redirect_cache.get(token)
+    if cached_url is not None:
+        _record_scan(token, request, db)
+        return RedirectResponse(url=cached_url, status_code=302)
+
+    mapping = db.query(UrlMapping).filter(UrlMapping.token == token).first()
+    if mapping is None:
+        raise HTTPException(status_code=404, detail="Not Found")
+
+    expires_at = mapping.expires_at
+    if expires_at is not None and expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+    if mapping.is_deleted or (
+        expires_at is not None and expires_at < datetime.now(timezone.utc)
+    ):
+        raise HTTPException(status_code=410, detail="Link expired or deleted")
+
+    redirect_cache[token] = mapping.original_url
+    _record_scan(token, request, db)
+    return RedirectResponse(url=mapping.original_url, status_code=302)
 
 
 @router.get("/api/qr/{token}", response_model=QRInfoResponse)
